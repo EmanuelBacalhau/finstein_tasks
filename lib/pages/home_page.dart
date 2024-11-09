@@ -39,6 +39,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void removeTodo(Todo todo) {
+    setState(() {
+      todos.remove(todo);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -91,11 +97,11 @@ class _HomePageState extends State<HomePage> {
               Flexible(
                 fit: FlexFit.tight,
                 child: ListView(
-                  reverse: true,
                   shrinkWrap: true,
                   children: todos
                       .map((todo) => TodoListItem(
                             todo: todo,
+                            removeTodo: removeTodo,
                           ))
                       .toList(),
                 ),

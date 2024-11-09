@@ -5,8 +5,9 @@ import 'package:intl/intl.dart';
 
 class TodoListItem extends StatelessWidget {
   final Todo todo;
+  final Function(Todo) removeTodo;
 
-  TodoListItem({super.key, required this.todo});
+  const TodoListItem({super.key, required this.todo, required this.removeTodo});
 
   get formattedDate => DateFormat(
         'dd/MM/yyyy - HH:mm:ss',
@@ -18,6 +19,7 @@ class TodoListItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Slidable(
         endActionPane: ActionPane(
+          extentRatio: 0.25,
           motion: const ScrollMotion(),
           children: [
             SlidableAction(
@@ -26,7 +28,7 @@ class TodoListItem extends StatelessWidget {
                 bottomRight: Radius.circular(4),
               ),
               padding: EdgeInsets.zero,
-              onPressed: (_) => {},
+              onPressed: (_) => removeTodo(todo),
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
               label: 'Remover ',
