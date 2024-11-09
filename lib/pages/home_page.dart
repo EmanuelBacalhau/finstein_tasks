@@ -11,6 +11,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Todo> todos = [];
+  Todo? todoDeleted;
+  int? indexTodoDeleted;
 
   final TextEditingController todoController = TextEditingController();
 
@@ -33,6 +35,51 @@ class _HomePageState extends State<HomePage> {
     todoController.clear();
   }
 
+  void showDeleteTodosConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Deseja apagar todas as tarefas?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
+        content: const Text('Essa ação não poderá ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(context),
+            style: TextButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+            ),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Color(0xFF0D6FC6),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(context);
+              removeAll();
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+            ),
+            child: const Text(
+              'Limpar',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
   void removeAll() {
     setState(() {
       todos.clear();
@@ -40,25 +87,49 @@ class _HomePageState extends State<HomePage> {
   }
 
   void removeTodo(Todo todo) {
+    todoDeleted = todo;
+    indexTodoDeleted = todos.indexOf(todo);
+
     setState(() {
       todos.remove(todo);
     });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Tarefa removida com sucesso!',
+          style: TextStyle(
+            color: Colors.black,
+          ),
+        ),
+        duration: const Duration(seconds: 5),
+        backgroundColor: Colors.white,
+        action: SnackBarAction(
+          label: 'Desfazer',
+          textColor: const Color(0xFF0D6FC6),
+          onPressed: () {
+            setState(() {
+              todos.insert(indexTodoDeleted!, todoDeleted!);
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          centerTitle: true,
-          backgroundColor: const Color(0xFF0D6FC6),
-          title: const Text(
-            'Finstein Tasks',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          )),
+        centerTitle: true,
+        toolbarHeight: 80,
+        backgroundColor: const Color(0xFF0D6FC6),
+        title: Image.asset(
+          'assets/images/finstein_gmbh_logo-removebg.png',
+          height: 80,
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -123,7 +194,7 @@ class _HomePageState extends State<HomePage> {
                     child:
                         Text('Você possui ${todos.length} tarefas pendentes')),
                 ElevatedButton(
-                  onPressed: removeAll,
+                  onPressed: showDeleteTodosConfirmationDialog,
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: const Color(0xFF0D6FC6),
