@@ -1,4 +1,5 @@
 import 'package:finstein_tasks/models/todo.dart';
+import 'package:finstein_tasks/repositories/todo_repository.dart';
 import 'package:finstein_tasks/widgets/todo_list_item.dart';
 import 'package:flutter/material.dart';
 
@@ -15,23 +16,42 @@ class _HomePageState extends State<HomePage> {
   int? indexTodoDeleted;
 
   final TextEditingController todoController = TextEditingController();
+  String? todoErrorText;
+  final TodoRepository todoRepository = TodoRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    todoRepository.getAll().then((value) {
+      setState(() {
+        todos = value;
+      });
+    });
+  }
 
   void addTodo() {
     String title = todoController.text;
 
     if (title.isEmpty) {
+      setState(() {
+        todoErrorText = 'Campo obrigatório';
+      });
       return;
     }
 
     Todo todo = Todo(
       title: title,
+      date: DateTime.now(),
     );
 
     setState(() {
       todos.add(
         todo,
       );
+      todoErrorText = null;
     });
+
+    todoRepository.save(todos);
     todoController.clear();
   }
 
@@ -80,18 +100,23 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void removeAll() {
+  void removeAll() async {
+    todoRepository.deleteAll();
+    List<Todo> newTodos = await todoRepository.getAll();
+
     setState(() {
-      todos.clear();
+      todos = newTodos;
     });
   }
 
-  void removeTodo(Todo todo) {
+  void removeTodo(Todo todo) async {
     todoDeleted = todo;
     indexTodoDeleted = todos.indexOf(todo);
+    todoRepository.delete(indexTodoDeleted!);
+    List<Todo> newTodos = await todoRepository.getAll();
 
     setState(() {
-      todos.remove(todo);
+      todos = newTodos;
     });
 
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -112,6 +137,8 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               todos.insert(indexTodoDeleted!, todoDeleted!);
             });
+
+            todoRepository.save(todos);
           },
         ),
       ),
@@ -142,6 +169,7 @@ class _HomePageState extends State<HomePage> {
                     controller: todoController,
                     decoration: InputDecoration(
                       hintText: 'Ex: Estudar Flutter',
+                      errorText: todoErrorText,
                       focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
                         color: Color(0xFF0D6FC6),
